@@ -4,7 +4,6 @@ elements_PYTHON = 		\
 	__init__.py 		\
 	arraysink.py 		\
 	mixer.py		\
-	singledecodebin.py 	\
 	thumbnailsink.py 	\
 	videofade.py
 

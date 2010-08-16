@@ -33,7 +33,6 @@ import rsvg
 from gettext import gettext as _
 import pitivi.utils as utils
 from pitivi.configure import get_pixmap_dir
-from pitivi.elements.singledecodebin import SingleDecodeBin
 from pitivi.elements.thumbnailsink import CairoSurfaceThumbnailSink
 from pitivi.elements.arraysink import ArraySink
 from pitivi.signalinterface import Signallable
@@ -210,7 +209,10 @@ class RandomAccessPreviewer(Previewer):
         # bin = factory.makeBin(stream_)
         uri = factory.uri
         caps = stream_.caps
-        bin = SingleDecodeBin(uri=uri, caps=caps, stream=stream_)
+        bin = gst.element_factory_make("uridecodebin")
+        bin.props.uri = uri
+        bin.props.caps = caps
+        bin.props.expose_all_streams = False
 
         # assume 50 pixel height
         self.theight = 50

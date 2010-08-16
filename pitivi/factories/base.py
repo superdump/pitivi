@@ -26,7 +26,6 @@ from urllib import unquote
 import gst
 
 from pitivi.log.loggable import Loggable
-from pitivi.elements.singledecodebin import SingleDecodeBin
 from pitivi.signalinterface import Signallable
 from pitivi.stream import match_stream_groups_map, AudioStream, VideoStream
 from pitivi.utils import formatPercent
@@ -212,7 +211,7 @@ class SourceFactory(ObjectFactory):
     ffscale_factory = 'ffvideoscale'
 
     # make this an attribute to inject it from tests
-    singleDecodeBinClass = SingleDecodeBin
+    singleDecodeBinClass = None
 
     def __init__(self, uri, name=''):
         name = name or os.path.basename(unquote(uri))
@@ -357,15 +356,21 @@ class SourceFactory(ObjectFactory):
             del bin.scale
 
         if hasattr(bin, "ghostpad"):
-            # singledecodebin found something on this pad
+            # uridecodebin found something on this pad
             bin.ghostpad.set_active(False)
             bin.remove_pad(bin.ghostpad)
             del bin.ghostpad
 
     def _makeStreamBinReal(self, output_stream):
         b = gst.Bin()
-        b.decodebin = self.singleDecodeBinClass(uri=self.uri, caps=output_stream.caps,
-                                           stream=output_stream)
+        if self.singleDecodeBinClass is None:
+            b.decodebin = gst.element_factory_make("uridecodebin")
+            b.decodebin.props.uri = self.uri
+            b.decodebin.props.caps = output_stream.caps
+            b.decodebin.props.expose_all_streams = False
+        else:
+            b.decodebin = self.singleDecodeBinClass(uri=self.uri, caps=output_stream.caps,
+                                               stream=output_stream)
         b.decodebin.connect("pad-added", self._singlePadAddedCb, b)
         b.decodebin.connect("pad-removed", self._singlePadRemovedCb, b)
         return b
